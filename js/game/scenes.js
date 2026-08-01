@@ -4,6 +4,7 @@
     constructor(content) {
       this.content = content;
       this.save = Park.engine.storage.load(content.levelOrder);
+      if (!content.characterOrder.includes(this.save.settings.character)) this.save.settings.character = 'cow';
       Park.engine.audio.setMuted(this.save.settings.muted);
       this.world = null;
       this.mode = 'menu';
@@ -15,6 +16,8 @@
         overlay: document.getElementById('overlay'),
         title: document.getElementById('overlay-title'),
         copy: document.getElementById('overlay-copy'),
+        characterPicker: document.getElementById('character-picker'),
+        characterOptions: document.getElementById('character-options'),
         help: document.getElementById('controls-help'),
         endlessHelp: document.getElementById('endless-controls-help'),
         helpToggle: document.getElementById('controls-toggle'),
@@ -29,6 +32,7 @@
       this.dom.pause.addEventListener('click', () => this.togglePause());
       this.dom.mute.addEventListener('click', () => this.toggleMute());
       this.dom.helpToggle.addEventListener('click', () => this.toggleControlsHelp());
+      this.renderCharacterPicker();
       this.updateMuteButton();
       this.showMenu();
     }
@@ -42,6 +46,35 @@
       if (options?.className) button.classList.add(...options.className.split(' '));
       button.addEventListener('click', () => { Park.engine.audio.resume(); onClick(); });
       return button;
+    }
+
+    characterButton(id) {
+      const data = this.content.sprites[id];
+      const selected = this.save.settings.character === id;
+      const button = this.button('', () => this.selectCharacter(id), { className: 'character-option' });
+      button.dataset.character = id;
+      button.setAttribute('aria-label', `选择${data.name}`);
+      button.setAttribute('aria-pressed', String(selected));
+      const preview = Park.engine.renderer.buildSprite(data, 2);
+      preview.className = 'character-preview';
+      preview.setAttribute('aria-hidden', 'true');
+      const label = document.createElement('span');
+      label.textContent = data.name;
+      button.append(preview, label);
+      return button;
+    }
+
+    renderCharacterPicker() {
+      const buttons = this.content.characterOrder.map((id) => this.characterButton(id));
+      this.dom.characterOptions.replaceChildren(...buttons);
+    }
+
+    selectCharacter(id) {
+      if (this.save.settings.character === id) return;
+      this.save.settings.character = id;
+      Park.engine.storage.save(this.save);
+      this.renderCharacterPicker();
+      this.toast(`已选择${this.content.sprites[id].name}`);
     }
 
     levelButton(id, index) {
@@ -107,6 +140,7 @@
       this.dom.title.innerHTML = title;
       this.dom.copy.textContent = copy;
       this.dom.actions.replaceChildren(...buttons);
+      this.dom.characterPicker.hidden = !options?.showCharacters;
       const controlsMode = options?.controlsMode || (options?.showControls ? 'shown' : 'hidden');
       const showControls = controlsMode === 'shown';
       const showEndlessControls = controlsMode === 'endless';
@@ -143,9 +177,10 @@
       this.dom.beans.textContent = '彩豆 0/0';
       const buttons = this.content.levelOrder.map((id, index) => this.levelButton(id, index));
       buttons.push(this.endlessButton());
-      this.showOverlay('拼豆小牛<br>乐园大冒险', '选一站，继续跑。', buttons, {
+      this.showOverlay('拼豆伙伴<br>乐园大冒险', '选一位伙伴，再选一站。', buttons, {
         controlsMode: 'toggle',
-        layout: 'levels'
+        layout: 'levels',
+        showCharacters: true
       });
     }
 
@@ -166,7 +201,7 @@
       this.mode = 'endless';
       this.dom.shell.classList.add('endless-mode');
       this.hideOverlay();
-      this.world = new Park.game.EndlessWorld(this.content.modes.endless, this.content, {
+      this.world = new Park.game.EndlessWorld(this.content.modes.endless, this.content, this.save, {
         hud: (data) => this.updateEndlessHud(data),
         restart: () => this.startEndless(),
         complete: (result) => this.finishEndless(result)

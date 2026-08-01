@@ -10,7 +10,6 @@
   const FIELD_RIGHT = WIDTH - FIELD_X;
   const PLAYER_W = Math.round(34 * WORLD_SCALE);
   const PLAYER_H = Math.round(46 * WORLD_SCALE);
-  const PLAYER_SPRITE_SIZE = Math.round(50 * WORLD_SCALE);
   const PLATFORM_H = Math.round(14 * WORLD_SCALE);
   const SPIKE_H = Math.round(12 * WORLD_SCALE);
   const BEAN_PICKUP_SIZE = 64 * WORLD_SCALE;
@@ -34,12 +33,19 @@
   }
 
   class EndlessWorld {
-    constructor(config, content, callbacks) {
+    constructor(config, content, save, callbacks) {
       this.config = config;
       this.content = content;
+      this.save = save;
       this.callbacks = callbacks;
       this.theme = content.themes.night;
-      this.sprite = Park.engine.renderer.buildSprite(content.sprites.cow, 2);
+      this.characterId = content.sprites[save.settings?.character] ? save.settings.character : 'cow';
+      const spriteData = content.sprites[this.characterId];
+      this.sprite = Park.engine.renderer.buildSprite(spriteData, 2);
+      this.spriteDraw = {
+        w: Math.round((spriteData.draw?.w || 50) * WORLD_SCALE),
+        h: Math.round((spriteData.draw?.h || 50) * WORLD_SCALE)
+      };
       this.time = 0;
       this.speed = config.speed.initial;
       this.tile = TILE;
@@ -434,31 +440,35 @@
       }
 
       this.trails.forEach((trail) => {
+        const spriteW = this.spriteDraw.w;
+        const spriteH = this.spriteDraw.h;
         ctx.save();
         ctx.globalAlpha = trail.life * 1.7;
         ctx.translate(trail.x + PLAYER_W / 2, trail.y - this.cameraY + PLAYER_H / 2);
         ctx.scale(trail.facing, 1);
         ctx.drawImage(
           this.sprite,
-          -PLAYER_SPRITE_SIZE / 2,
-          -PLAYER_SPRITE_SIZE / 2,
-          PLAYER_SPRITE_SIZE,
-          PLAYER_SPRITE_SIZE
+          -spriteW / 2,
+          -spriteH / 2,
+          spriteW,
+          spriteH
         );
         ctx.restore();
       });
 
       const playerY = this.player.y - this.cameraY;
+      const spriteW = this.spriteDraw.w;
+      const spriteH = this.spriteDraw.h;
       ctx.save();
       ctx.translate(this.player.x + PLAYER_W / 2, playerY + PLAYER_H / 2);
       ctx.scale(this.player.facing, 1);
       ctx.rotate(this.player.vx / DASH_SPEED * 0.08);
       ctx.drawImage(
         this.sprite,
-        -PLAYER_SPRITE_SIZE / 2,
-        -PLAYER_SPRITE_SIZE / 2,
-        PLAYER_SPRITE_SIZE,
-        PLAYER_SPRITE_SIZE
+        -spriteW / 2,
+        -spriteH / 2,
+        spriteW,
+        spriteH
       );
       ctx.restore();
 

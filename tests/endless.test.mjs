@@ -34,6 +34,7 @@ function run(relative) {
 run('js/content/manifest.js');
 context.ParkContent = context.window.ParkContent;
 run('js/content/cow.js');
+run('js/content/heart-puppy.js');
 run('js/content/endless.js');
 run('js/engine/storage.js');
 run('js/game/endless-world.js');
@@ -51,9 +52,10 @@ function input(extra = {}) {
   };
 }
 
-function createWorld() {
+function createWorld(character = 'cow') {
   const events = { hud: [], complete: [], restarts: 0 };
-  const world = new context.Park.game.EndlessWorld(content.modes.endless, content, {
+  const save = { settings: { muted: false, character } };
+  const world = new context.Park.game.EndlessWorld(content.modes.endless, content, save, {
     hud: (data) => events.hud.push(data),
     complete: (data) => events.complete.push(data),
     restart: () => { events.restarts += 1; }
@@ -71,6 +73,20 @@ test('legacy save gains an endless high score without losing level progress', ()
   assert.equal(save.progress.unlockedLevel, 3);
   assert.equal(save.progress.bestStars.level1, 2);
   assert.equal(save.progress.bestEndlessScore, 0);
+  assert.equal(save.settings.character, 'cow');
+});
+
+test('character choice persists and is shared with endless mode', () => {
+  stored = JSON.stringify({
+    version: 1,
+    settings: { muted: false, character: 'heartPuppy' },
+    progress: { dashUnlocked: false, unlockedLevel: 1, bestStars: {}, bestEndlessScore: 0 }
+  });
+  const save = context.Park.engine.storage.load(['level1', 'level2', 'level3', 'level4', 'level5']);
+  const { world } = createWorld(save.settings.character);
+  assert.equal(save.settings.character, 'heartPuppy');
+  assert.equal(world.characterId, 'heartPuppy');
+  assert.ok(world.spriteDraw.w > world.spriteDraw.h);
 });
 
 test('segments generate floating stairs, elevators, spikes, and balls ahead', () => {

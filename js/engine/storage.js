@@ -3,7 +3,7 @@
   const KEY = 'park-cow-adventure:v1';
   const defaults = {
     version: 1,
-    settings: { muted: false },
+    settings: { muted: false, character: 'cow' },
     progress: {
       dashUnlocked: false,
       unlockedLevel: 1,
@@ -23,6 +23,7 @@
       const parsed = JSON.parse(localStorage.getItem(KEY) || 'null');
       if (!parsed || parsed.version !== 1) return result;
       if (typeof parsed.settings?.muted === 'boolean') result.settings.muted = parsed.settings.muted;
+      if (typeof parsed.settings?.character === 'string') result.settings.character = parsed.settings.character;
       if (typeof parsed.progress?.dashUnlocked === 'boolean') result.progress.dashUnlocked = parsed.progress.dashUnlocked;
       if (Number.isInteger(parsed.progress?.unlockedLevel)) {
         result.progress.unlockedLevel = Math.max(1, Math.min(levelIds.length, parsed.progress.unlockedLevel));

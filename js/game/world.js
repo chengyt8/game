@@ -60,7 +60,10 @@
         };
       });
       this.spawn = pointFromTiles(level.spawn);
-      this.sprite = Park.engine.renderer.buildSprite(content.sprites.cow, 2);
+      this.characterId = content.sprites[save.settings?.character] ? save.settings.character : 'cow';
+      const spriteData = content.sprites[this.characterId];
+      this.sprite = Park.engine.renderer.buildSprite(spriteData, 2);
+      this.spriteDraw = spriteData.draw || { w: 50, h: 50 };
       this.particles = [];
       this.trails = [];
       this.completed = false;
@@ -590,12 +593,14 @@
 
     drawPlayer(ctx) {
       const player = this.player;
+      const spriteW = this.spriteDraw.w;
+      const spriteH = this.spriteDraw.h;
       this.trails.forEach((trail) => {
         ctx.save();
         ctx.globalAlpha = trail.life * 1.5;
         ctx.translate(trail.x + player.w / 2, trail.y + player.h / 2);
         ctx.scale(trail.facing, 1);
-        ctx.drawImage(this.sprite, -25, -25, 50, 50);
+        ctx.drawImage(this.sprite, -spriteW / 2, -spriteH / 2, spriteW, spriteH);
         ctx.restore();
       });
       ctx.save();
@@ -605,7 +610,7 @@
       const scaleX = player.facing * (1 + player.squash - player.stretch * 0.35);
       const scaleY = 1 - player.squash * 0.45 + player.stretch;
       ctx.scale(scaleX, scaleY);
-      ctx.drawImage(this.sprite, -25, -25, 50, 50);
+      ctx.drawImage(this.sprite, -spriteW / 2, -spriteH / 2, spriteW, spriteH);
       ctx.restore();
     }
   }

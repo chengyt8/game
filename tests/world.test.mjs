@@ -30,6 +30,7 @@ function run(relative) {
 run('js/content/manifest.js');
 context.ParkContent = context.window.ParkContent;
 run('js/content/cow.js');
+run('js/content/heart-puppy.js');
 run('js/content/level1.js');
 run('js/content/level2.js');
 run('js/content/level3.js');
@@ -40,9 +41,9 @@ run('js/game/world.js');
 
 const content = JSON.parse(JSON.stringify(context.window.ParkContent));
 
-function save() {
+function save(character = 'cow') {
   return {
-    settings: { muted: false },
+    settings: { muted: false, character },
     progress: {
       dashUnlocked: false,
       unlockedLevel: 1,
@@ -59,9 +60,9 @@ function input(extra = {}) {
   };
 }
 
-function worldWithEvents(id = 'level1') {
+function worldWithEvents(id = 'level1', character = 'cow') {
   const events = { hud: [], toast: [], complete: [] };
-  const instance = new context.Park.game.World(content.levels[id], content, save(), {
+  const instance = new context.Park.game.World(content.levels[id], content, save(character), {
     hud(data) { events.hud.push(data); },
     toast(message) { events.toast.push(message); },
     complete(data) { events.complete.push(data); }
@@ -82,6 +83,18 @@ test('player settles on the first platform', () => {
   settle(instance);
   assert.equal(instance.player.onGround, true);
   assert.ok(Math.abs(instance.player.y + instance.player.h - 480) < 0.01);
+});
+
+test('the selected character is used without changing the player hitbox', () => {
+  const cow = worldWithEvents('level1', 'cow').instance;
+  const puppy = worldWithEvents('level1', 'heartPuppy').instance;
+  assert.equal(cow.characterId, 'cow');
+  assert.equal(puppy.characterId, 'heartPuppy');
+  assert.deepEqual(
+    { w: puppy.player.w, h: puppy.player.h },
+    { w: cow.player.w, h: cow.player.h }
+  );
+  assert.ok(puppy.spriteDraw.w > cow.spriteDraw.w);
 });
 
 test('jump buffer fires and jump release shortens ascent', () => {

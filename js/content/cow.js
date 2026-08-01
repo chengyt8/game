@@ -3,6 +3,7 @@
 // 源：codex/拼豆小牛/output/bead_pattern/小牛表情_格子数据_29x29.csv（裁剪空白边）
 ParkContent.sprites.cow = {
   name: '拼豆小牛',
+  draw: { w: 50, h: 50 },
   cellSize: 1,
   palette: {"K1": "#232321", "G1": "#3E3E3B", "W1": "#F7F7F2", "S1": "#C6C7C5", "S2": "#8E8F8D", "Y1": "#F7C768", "O1": "#F6991F", "O2": "#CF680D", "B1": "#825313"},
   grid: [[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,"S2","S2",null],

@@ -22,7 +22,7 @@ function insideRect(rect, level) {
     && rect.x + rect.w <= level.size.w && rect.y + rect.h <= level.size.h;
 }
 
-const baseFiles = ['manifest.js', 'cow.js'];
+const baseFiles = ['manifest.js', 'cow.js', 'heart-puppy.js'];
 for (const file of baseFiles) check(fs.existsSync(path.join(contentDir, file)), `缺少 ${file}`);
 if (errors.length) {
   console.error(errors.join('\n'));
@@ -41,7 +41,7 @@ const declaredLevels = context.window.ParkContent?.levelOrder;
 check(Array.isArray(declaredLevels) && declaredLevels.length >= 3, 'levelOrder 必须至少包含三关');
 check(Array.isArray(declaredLevels) && new Set(declaredLevels).size === declaredLevels.length, 'levelOrder 不能包含重复关卡');
 const levelFiles = Array.isArray(declaredLevels) ? declaredLevels.map((id) => `${id}.js`) : [];
-const expectedFiles = ['cow.js', ...levelFiles, 'endless.js'];
+const expectedFiles = ['cow.js', 'heart-puppy.js', ...levelFiles, 'endless.js'];
 for (const file of expectedFiles) check(fs.existsSync(path.join(contentDir, file)), `缺少 ${file}`);
 if (errors.length) {
   console.error(errors.join('\n'));
@@ -68,6 +68,14 @@ if (sprite) {
   check(sprite.grid[0].some(Boolean) && sprite.grid.at(-1).some(Boolean), 'cow.grid 上下不得有全空行');
   check(sprite.grid.some((row) => row[0]) && sprite.grid.some((row) => row.at(-1)), 'cow.grid 左右不得有全空列');
 }
+
+check(Array.isArray(content?.characterOrder) && content.characterOrder.length >= 2, 'characterOrder 必须至少包含两个角色');
+check(new Set(content?.characterOrder || []).size === content?.characterOrder?.length, 'characterOrder 不能包含重复角色');
+for (const id of content?.characterOrder || []) check(Boolean(content.sprites?.[id]), `缺少角色 ${id}`);
+const puppy = content?.sprites?.heartPuppy;
+check(puppy?.image === 'assets/characters/heart-puppy.png', '心形小狗图片路径不正确');
+check(fs.existsSync(path.join(projectRoot, puppy?.image || '')), '缺少心形小狗 PNG 素材');
+check(isNumber(puppy?.draw?.w) && isNumber(puppy?.draw?.h), '心形小狗缺少绘制尺寸');
 
 for (const id of content?.levelOrder || []) {
   const level = content.levels?.[id];

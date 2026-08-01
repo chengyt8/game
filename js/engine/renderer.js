@@ -5,6 +5,20 @@
   ctx.imageSmoothingEnabled = false;
 
   function buildSprite(data, beadSize) {
+    if (data.image) {
+      const sprite = document.createElement('canvas');
+      sprite.width = data.texture?.w || 256;
+      sprite.height = data.texture?.h || 256;
+      const target = sprite.getContext('2d');
+      const image = new Image();
+      image.addEventListener('load', () => {
+        target.imageSmoothingEnabled = true;
+        target.clearRect(0, 0, sprite.width, sprite.height);
+        target.drawImage(image, 0, 0, sprite.width, sprite.height);
+      });
+      image.src = data.image;
+      return sprite;
+    }
     const sprite = document.createElement('canvas');
     sprite.width = data.grid[0].length * beadSize;
     sprite.height = data.grid.length * beadSize;

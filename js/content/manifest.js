@@ -4,6 +4,7 @@
 window.ParkContent = {
   version: 1,
   levelOrder: ['level1', 'level2', 'level3', 'level4', 'level5'],
+  characterOrder: ['cow', 'heartPuppy'],
   palette: {},
   themes: {
     // L1 入口广场：白天
