@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#18243a">
+  <title>拼豆小牛 · 乐园大冒险</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="css/game.css?v=6">
+</head>
+<body>
+  <main id="game-shell">
+    <canvas id="game" width="960" height="540" aria-label="拼豆小牛乐园大冒险游戏画面"></canvas>
+
+    <section id="hud" aria-live="polite">
+      <div class="hud-group">
+        <span id="hud-level">入口广场</span>
+        <span id="hud-beans">彩豆 0/0</span>
+      </div>
+      <div class="hud-actions">
+        <button class="icon-button" id="mute-button" type="button" aria-label="静音" title="静音">♪</button>
+        <button class="icon-button" id="pause-button" type="button" aria-label="暂停" title="暂停">Ⅱ</button>
+      </div>
+    </section>
+
+    <div id="toast" role="status" aria-live="polite"></div>
+
+    <section id="overlay" class="overlay is-visible" aria-live="polite">
+      <div class="overlay-panel">
+        <button id="controls-toggle" class="help-button" type="button" aria-label="查看操作说明" aria-controls="controls-help" aria-expanded="false" title="查看操作说明" hidden>?</button>
+        <p class="eyebrow">AGENT 游乐园</p>
+        <h1 id="overlay-title">拼豆小牛<br>乐园大冒险</h1>
+        <p id="overlay-copy">今天也要轻快地跑起来。</p>
+        <section id="controls-help" class="controls-help" aria-label="操作说明" hidden>
+          <div class="controls-grid">
+            <span><b>移动</b><kbd>← →</kbd><kbd>A D</kbd></span>
+            <span><b>跳跃</b><kbd>Space</kbd><kbd>↑ / W</kbd></span>
+            <span><b>空中冲刺</b><kbd>J</kbd><kbd>Shift</kbd></span>
+            <span><b>重开</b><kbd>R</kbd></span>
+            <span><b>暂停</b><kbd>P</kbd><kbd>Esc</kbd></span>
+            <span><b>静音</b><kbd>M</kbd></span>
+          </div>
+          <p><strong>没有二段跳：</strong>一次滞空可以跳一次、冲一次；按方向可八向冲刺，落地后重置。</p>
+          <p class="touch-help">触屏：左下控制方向，右下使用「跳」和「冲」。</p>
+        </section>
+        <section id="endless-controls-help" class="controls-help" aria-label="无尽坠落操作说明" hidden>
+          <div class="controls-grid">
+            <span><b>移动</b><kbd>← →</kbd><kbd>A D</kbd></span>
+            <span><b>跳跃</b><kbd>Space</kbd><kbd>↑ / W</kbd></span>
+            <span><b>加速下落</b><kbd>↓ / S</kbd></span>
+            <span><b>水平冲刺</b><kbd>J</kbd><kbd>Shift</kbd></span>
+            <span><b>重开</b><kbd>R</kbd></span>
+            <span><b>暂停</b><kbd>P</kbd><kbd>Esc</kbd></span>
+            <span><b>静音</b><kbd>M</kbd></span>
+          </div>
+          <p>离开楼梯或跳起后可以向下一层调整；落地才能再次跳。掉到底部或被顶出顶部都会结束。</p>
+          <p class="touch-help">触屏：左下控制左右与加速下落，右下使用「跳」和「冲」。</p>
+        </section>
+        <div id="overlay-actions" class="overlay-actions"></div>
+      </div>
+    </section>
+
+    <section id="touch-controls" aria-label="触屏操作">
+      <div class="dpad">
+        <button data-action="up" type="button" aria-label="向上">▲</button>
+        <button data-action="left" type="button" aria-label="向左">◀</button>
+        <button data-action="down" type="button" aria-label="向下">▼</button>
+        <button data-action="right" type="button" aria-label="向右">▶</button>
+      </div>
+      <div class="action-pad">
+        <button class="dash-button" data-action="dash" type="button" aria-label="冲刺">冲</button>
+        <button class="jump-button" data-action="jump" type="button" aria-label="跳跃">跳</button>
+      </div>
+    </section>
+  </main>
+
+  <script>window.Park = { content: null, engine: {}, game: {} };</script>
+  <script src="js/content/manifest.js?v=4"></script>
+  <script src="js/content/cow.js?v=4"></script>
+  <script>
+    ParkContent.levelOrder.forEach((id) => {
+      document.write(`<script src="js/content/${id}.js?v=4"><\/script>`);
+    });
+  </script>
+  <script src="js/content/endless.js?v=8"></script>
+  <script src="js/engine/input.js?v=4"></script>
+  <script src="js/engine/audio.js?v=6"></script>
+  <script src="js/engine/storage.js?v=4"></script>
+  <script src="js/engine/renderer.js?v=4"></script>
+  <script src="js/engine/loop.js?v=4"></script>
+  <script src="js/game/content-loader.js?v=4"></script>
+  <script src="js/game/physics.js?v=4"></script>
+  <script src="js/game/world.js?v=6"></script>
+  <script src="js/game/endless-world.js?v=8"></script>
+  <script src="js/game/scenes.js?v=6"></script>
+  <script src="js/game/main.js?v=4"></script>
+</body>
+</html>

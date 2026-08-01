@@ -1,0 +1,10 @@
+# Local collaboration notes
+RESPONSIBILITIES.md
+协作看板.md
+
+# Browser-only development helpers
+tests/*-preview.html
+tests/unlock-endless.html
+
+# Local system files
+.DS_Store
