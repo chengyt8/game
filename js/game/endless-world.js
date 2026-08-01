@@ -2,20 +2,26 @@
 (function () {
   const WIDTH = 960;
   const HEIGHT = 540;
-  const TILE = 48;
+  const BASE_TILE = 48;
+  const WORLD_SCALE = 0.75;
+  const TILE = BASE_TILE * WORLD_SCALE;
   const COLUMNS = 16;
   const FIELD_X = (WIDTH - COLUMNS * TILE) / 2;
   const FIELD_RIGHT = WIDTH - FIELD_X;
-  const PLAYER_W = 34;
-  const PLAYER_H = 46;
-  const PLATFORM_H = 14;
-  const SPIKE_H = 12;
-  const BEAN_PICKUP_SIZE = 64;
-  const BEAN_Y_OFFSET = 24;
-  const GRAVITY = 1500;
-  const FAST_FALL_GRAVITY = 1900;
-  const MAX_FALL_SPEED = 620;
-  const JUMP_SPEED = 560;
+  const PLAYER_W = Math.round(34 * WORLD_SCALE);
+  const PLAYER_H = Math.round(46 * WORLD_SCALE);
+  const PLAYER_SPRITE_SIZE = Math.round(50 * WORLD_SCALE);
+  const PLATFORM_H = Math.round(14 * WORLD_SCALE);
+  const SPIKE_H = Math.round(12 * WORLD_SCALE);
+  const BEAN_PICKUP_SIZE = 64 * WORLD_SCALE;
+  const BEAN_Y_OFFSET = 24 * WORLD_SCALE;
+  const GRAVITY = 1500 * WORLD_SCALE;
+  const FAST_FALL_GRAVITY = 1900 * WORLD_SCALE;
+  const MAX_FALL_SPEED = 620 * WORLD_SCALE;
+  const JUMP_SPEED = 560 * WORLD_SCALE;
+  const MOVE_SPEED = 250 * WORLD_SCALE;
+  const MOVE_ACCELERATION = 1900 * WORLD_SCALE;
+  const DASH_SPEED = 430 * WORLD_SCALE;
   const FOOT_EPSILON = 2;
 
   function overlap(a, b) {
@@ -36,6 +42,8 @@
       this.sprite = Park.engine.renderer.buildSprite(content.sprites.cow, 2);
       this.time = 0;
       this.speed = config.speed.initial;
+      this.tile = TILE;
+      this.worldScale = WORLD_SCALE;
       this.cameraY = 0;
       this.segmentIndex = 0;
       this.nextSegmentY = 7 * TILE;
@@ -140,13 +148,13 @@
         player.dashTime = Math.max(0, player.dashTime - dt);
         if (Math.floor(this.time * 48) % 2 === 0) this.addTrail(false);
       } else {
-        player.vx = approach(player.vx, input.moveX * 250, 1900 * dt);
+        player.vx = approach(player.vx, input.moveX * MOVE_SPEED, MOVE_ACCELERATION * dt);
         if (input.moveX) player.facing = Math.sign(input.moveX);
       }
 
       if (input.dashPressed && player.dashAvailable && player.dashTime <= 0) {
         const direction = input.moveX || player.facing || 1;
-        player.vx = Math.sign(direction) * 430;
+        player.vx = Math.sign(direction) * DASH_SPEED;
         player.facing = Math.sign(direction);
         player.dashTime = 0.16;
         player.dashAvailable = false;
@@ -156,7 +164,7 @@
 
       player.x += player.vx * dt;
       player.x = Math.max(FIELD_X, Math.min(FIELD_RIGHT - player.w, player.x));
-      this.cameraY += this.speed * dt;
+      this.cameraY += this.speed * WORLD_SCALE * dt;
       this.fillAhead();
 
       const standingPlatform = this.platforms.find((platform) => platform.id === player.standingPlatformId);
@@ -165,11 +173,13 @@
         player.vy = 0;
       } else {
         player.standingPlatformId = null;
+        const previousTop = player.y;
         const previousBottom = player.y + player.h;
         const gravity = GRAVITY + (input.moveY > 0 ? FAST_FALL_GRAVITY : 0);
         player.vy = Math.min(MAX_FALL_SPEED, player.vy + gravity * dt);
         player.y += player.vy * dt;
-        this.updateLandings(previousBottom);
+        if (player.vy < 0) this.updateCeilings(previousTop);
+        else this.updateLandings(previousBottom);
       }
 
       this.updateHazards();
@@ -195,7 +205,8 @@
         const oldX = platform.x;
         if (platform.motion) {
           const distance = platform.motion.distance * TILE;
-          const phase = (this.time * platform.motion.speed / distance + (platform.motion.phase || 0)) % 2;
+          const speed = platform.motion.speed * WORLD_SCALE;
+          const phase = (this.time * speed / distance + (platform.motion.phase || 0)) % 2;
           const ratio = phase <= 1 ? phase : 2 - phase;
           platform.x = platform.baseX + ratio * distance;
         }
@@ -233,6 +244,21 @@
       player.standingPlatformId = landing.id;
       player.dashAvailable = true;
       Park.engine.audio.sounds.land();
+    }
+
+    updateCeilings(previousTop = this.player.y) {
+      const player = this.player;
+      const currentTop = player.y;
+      let ceiling = null;
+      for (const platform of this.platforms) {
+        const underside = platform.y + platform.h;
+        if (underside > previousTop + FOOT_EPSILON || underside < currentTop - FOOT_EPSILON) continue;
+        if (!this.overlapsPlatform(platform, player)) continue;
+        if (!ceiling || underside > ceiling.underside) ceiling = { underside };
+      }
+      if (!ceiling) return;
+      player.y = ceiling.underside;
+      player.vy = 0;
     }
 
     updateHazards() {
@@ -324,8 +350,8 @@
         this.particles.push({
           x,
           y,
-          vx: (Math.random() - 0.5) * 210,
-          vy: (Math.random() - 0.5) * 210,
+          vx: (Math.random() - 0.5) * 210 * WORLD_SCALE,
+          vy: (Math.random() - 0.5) * 210 * WORLD_SCALE,
           life: 0.35 + Math.random() * 0.3,
           color
         });
@@ -339,7 +365,7 @@
         item.life -= dt;
         item.x += item.vx * dt;
         item.y += item.vy * dt;
-        item.vy += 320 * dt;
+        item.vy += 320 * WORLD_SCALE * dt;
       });
       this.particles = this.particles.filter((item) => item.life > 0);
     }
@@ -369,10 +395,11 @@
         ctx.fillStyle = this.theme.terrain;
         ctx.fillRect(platform.x, y, platform.w, platform.h);
         ctx.fillStyle = this.theme.terrainTop;
-        ctx.fillRect(platform.x, y, platform.w, 4);
+        ctx.fillRect(platform.x, y, platform.w, 3);
         if (platform.motion) {
           ctx.fillStyle = this.theme.accent;
-          ctx.fillRect(platform.x + 12, y + 8, Math.max(12, platform.w - 24), 3);
+          const inset = 12 * WORLD_SCALE;
+          ctx.fillRect(platform.x + inset, y + 6, Math.max(inset, platform.w - inset * 2), 2);
         }
         for (const spike of platform.spikes) {
           const count = Math.max(1, Math.round(spike.w * 2));
@@ -398,10 +425,10 @@
         ctx.scale(pulse, pulse);
         ctx.fillStyle = this.theme.accent;
         ctx.beginPath();
-        ctx.arc(0, 0, 10, 0, Math.PI * 2);
+        ctx.arc(0, 0, 8, 0, Math.PI * 2);
         ctx.fill();
         ctx.strokeStyle = 'rgba(255,255,255,.72)';
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 2;
         ctx.stroke();
         ctx.restore();
       }
@@ -411,7 +438,13 @@
         ctx.globalAlpha = trail.life * 1.7;
         ctx.translate(trail.x + PLAYER_W / 2, trail.y - this.cameraY + PLAYER_H / 2);
         ctx.scale(trail.facing, 1);
-        ctx.drawImage(this.sprite, -25, -25, 50, 50);
+        ctx.drawImage(
+          this.sprite,
+          -PLAYER_SPRITE_SIZE / 2,
+          -PLAYER_SPRITE_SIZE / 2,
+          PLAYER_SPRITE_SIZE,
+          PLAYER_SPRITE_SIZE
+        );
         ctx.restore();
       });
 
@@ -419,14 +452,20 @@
       ctx.save();
       ctx.translate(this.player.x + PLAYER_W / 2, playerY + PLAYER_H / 2);
       ctx.scale(this.player.facing, 1);
-      ctx.rotate(this.player.vx / 430 * 0.08);
-      ctx.drawImage(this.sprite, -25, -25, 50, 50);
+      ctx.rotate(this.player.vx / DASH_SPEED * 0.08);
+      ctx.drawImage(
+        this.sprite,
+        -PLAYER_SPRITE_SIZE / 2,
+        -PLAYER_SPRITE_SIZE / 2,
+        PLAYER_SPRITE_SIZE,
+        PLAYER_SPRITE_SIZE
+      );
       ctx.restore();
 
       this.particles.forEach((particle) => {
         ctx.globalAlpha = Math.min(1, particle.life * 3);
         ctx.fillStyle = particle.color;
-        ctx.fillRect(particle.x - 3, particle.y - this.cameraY - 3, 6, 6);
+        ctx.fillRect(particle.x - 2, particle.y - this.cameraY - 2, 4, 4);
       });
       ctx.globalAlpha = 1;
 

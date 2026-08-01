@@ -75,6 +75,9 @@ test('legacy save gains an endless high score without losing level progress', ()
 
 test('segments generate floating stairs, elevators, spikes, and balls ahead', () => {
   const { world } = createWorld();
+  assert.equal(world.tile, 36);
+  assert.equal(world.worldScale, 0.75);
+  assert.ok(world.player.w < 34 && world.player.h < 46);
   assert.ok(world.platforms.length >= 10);
   assert.ok(world.platforms.some((platform) => platform.motion));
   assert.ok(world.platforms.some((platform) => platform.spikes.length));
@@ -112,11 +115,23 @@ test('jump launches only from a stair and cannot repeat in midair', () => {
   const startY = world.player.y;
   world.update(1 / 120, input({ jumpPressed: true }));
   assert.equal(world.player.standingPlatformId, null);
-  assert.ok(world.player.vy < -540);
+  assert.ok(world.player.vy < -400);
   assert.ok(world.player.y < startY);
   const airborneVelocity = world.player.vy;
   world.update(1 / 120, input({ jumpPressed: true }));
   assert.ok(world.player.vy > airborneVelocity);
+});
+
+test('jumping into a stair underside stops upward movement', () => {
+  const { world } = createWorld();
+  const ceiling = world.platforms[1];
+  world.player.standingPlatformId = null;
+  world.player.x = ceiling.x + 12;
+  world.player.y = ceiling.y + ceiling.h + 3;
+  world.player.vy = -420;
+  world.update(1 / 60, input());
+  assert.equal(world.player.y, ceiling.y + ceiling.h);
+  assert.equal(world.player.vy, 0);
 });
 
 test('walking off a stair starts a fall and landing resets dash', () => {
@@ -158,7 +173,7 @@ test('a horizontal elevator carries the cow and same-direction input is faster',
   for (const run of [same, opposite]) {
     const platform = run.world.platforms.find((item) => item.motion);
     run.platform = platform;
-    run.startX = platform.x + 30;
+    run.startX = platform.x + 2;
     run.world.player.x = run.startX;
     run.world.player.y = platform.y - run.world.player.h;
     run.world.player.standingPlatformId = platform.id;
@@ -170,14 +185,14 @@ test('a horizontal elevator carries the cow and same-direction input is faster',
   assert.ok(same.world.player.x - same.startX > opposite.world.player.x - opposite.startX);
   const carriedBean = same.world.beans.find((item) => item.platformId === same.platform.id);
   assert.ok(carriedBean);
-  assert.equal(carriedBean.x, same.platform.x + (carriedBean.offset + 0.5) * 48);
+  assert.equal(carriedBean.x, same.platform.x + (carriedBean.offset + 0.5) * same.world.tile);
 });
 
 test('touching stair spikes ends the run', () => {
   const { world, events } = createWorld();
   const platform = world.platforms.find((item) => item.spikes.length);
   const spike = platform.spikes[0];
-  world.player.x = platform.x + spike.offset * 48 + 4;
+  world.player.x = platform.x + spike.offset * world.tile + 4;
   world.player.y = platform.y - world.player.h;
   world.player.standingPlatformId = platform.id;
   world.updateHazards();
@@ -188,7 +203,7 @@ test('touching stair spikes ends the run', () => {
 test('dash stays horizontal and fast fall accelerates an unsupported cow', () => {
   const dashRun = createWorld();
   dashRun.world.update(1 / 120, input({ moveX: -1, dashPressed: true }));
-  assert.equal(dashRun.world.player.vx, -430);
+  assert.equal(dashRun.world.player.vx, -322.5);
   assert.equal(dashRun.world.player.dashAvailable, false);
 
   const normal = createWorld();
