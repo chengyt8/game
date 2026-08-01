@@ -1,7 +1,7 @@
 // @owner codex
 // 第 2 关 · 云上步道（多云）
-// 教学：用空中冲刺跨越长距离；支路（弹簧 + 高架）加入「冲刺后接跳」的秘密彩豆。
-// 主路线全部可不用冲刺通过（地面岛屿 + 垫脚石）；冲刺打开高架支路。
+// 教学：开局用空中冲刺跨越无保底缺口；支路（弹簧 + 高架）加入「冲刺后接跳」的秘密彩豆。
+// 首个缺口失败会坠落，其余主路线空隙保留垫脚石；冲刺还能打开高架支路。
 ParkContent.levels.level2 = {
   id: 'level2',
   title: '云上步道',
@@ -11,9 +11,8 @@ ParkContent.levels.level2 = {
   checkpoint: { id: 'mid', x: 30, y: 10 },
   exit: { x: 80, y: 10, w: 1, h: 2 },
   platforms: [
-    // 六个主岛，5 格空隙，空隙里各放一块垫脚石（主路线宽容，不用冲刺也能过）
+    // 六个主岛；首个 5 格空隙无保底，后续空隙用垫脚石控制难度
     { id: 'island-a', type: 'solid', x: 0,  y: 12, w: 10, h: 2 },
-    { id: 'stone-a',  type: 'solid', x: 12, y: 13, w: 2,  h: 1 },
     { id: 'island-b', type: 'solid', x: 15, y: 12, w: 8,  h: 2 },
     { id: 'stone-b',  type: 'solid', x: 24, y: 13, w: 3,  h: 1 },
     { id: 'island-c', type: 'solid', x: 28, y: 12, w: 8,  h: 2 },

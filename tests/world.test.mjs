@@ -105,6 +105,13 @@ test('air dash snaps diagonally and is consumed until landing', () => {
   assert.equal(instance.player.dashAvailable, false);
 });
 
+test('level 2 opening dash gap has no safety platform', () => {
+  const openingGapPlatforms = content.levels.level2.platforms.filter((platform) => (
+    platform.y >= 12 && platform.x < 15 && platform.x + platform.w > 10
+  ));
+  assert.equal(openingGapPlatforms.length, 0);
+});
+
 test('checkpoint pole activates from the main route and preserves collection on death', () => {
   const instance = world();
   instance.player.x = instance.checkpoint.x - instance.player.w / 2;
